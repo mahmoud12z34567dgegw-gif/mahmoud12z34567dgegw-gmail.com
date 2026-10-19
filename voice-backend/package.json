@@ -1,0 +1,1 @@
+{"name":"ahlquran-voice-api","private":true,"type":"module","scripts":{"dev":"wrangler dev --remote","deploy":"wrangler deploy","db:remote":"wrangler d1 execute ahlquran_voice --remote --file=./schema.sql"},"devDependencies":{"wrangler":"^4.0.0"}}

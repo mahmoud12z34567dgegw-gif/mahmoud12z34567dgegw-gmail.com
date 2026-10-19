@@ -1,0 +1,14 @@
+name = "ahlquran-voice"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# Update database_id after: npx wrangler d1 create ahlquran_voice
+[[d1_databases]]
+binding = "DB"
+database_name = "ahlquran_voice"
+database_id = "REPLACE-WITH-D1-DATABASE-ID"
+
+[vars]
+APP_ORIGIN = "https://appassets.androidplatform.net"
+# LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET, BOOTSTRAP_SECRET must be set as secrets.

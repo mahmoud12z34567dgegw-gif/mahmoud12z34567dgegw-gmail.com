@@ -1,6 +1,12 @@
 package com.ahlquran.academy;
 
 import android.app.Activity;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.webkit.PermissionRequest;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceResponse;
+import androidx.webkit.WebViewAssetLoader;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -20,10 +26,13 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import org.json.JSONObject;
 
-/** Offline, single-device academy demonstration. No website or custom domain required. */
+/** Offline core with optional in-app audio rooms via LiveKit and authenticated Cloudflare Worker; no custom domain. */
 public class MainActivity extends Activity {
     private WebView web;
-    private static final String HOME = "file:///android_asset/index.html";
+    private static final String HOME = "https://appassets.androidplatform.net/assets/index.html";
+    private static final int MIC_REQUEST=5043;
+    private PermissionRequest pendingMic;
+    private WebViewAssetLoader assetLoader;
     private static final String PREF = "academy_offline_data";
     private static final int EXPORT_BACKUP = 5041;
     private static final int IMPORT_BACKUP = 5042;
@@ -81,21 +90,39 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         getWindow().setStatusBarColor(Color.rgb(0,72,54));
         getWindow().setNavigationBarColor(Color.rgb(248,248,242));
+        assetLoader=new WebViewAssetLoader.Builder().addPathHandler("/assets/",new WebViewAssetLoader.AssetsPathHandler(this)).build();
         web = new WebView(this);
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
-        s.setAllowFileAccess(true); // read only our packaged android_asset files
+        s.setAllowFileAccess(false); // secure HTTPS virtual origin via asset loader
         s.setAllowContentAccess(false);
         s.setAllowFileAccessFromFileURLs(false);
         s.setAllowUniversalAccessFromFileURLs(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        s.setMediaPlaybackRequiresUserGesture(true);
+        s.setMediaPlaybackRequiresUserGesture(false); // remote audio plays after joining; microphone still requires user & Android permission
         web.addJavascriptInterface(new OfflineData(), "AcademyOffline");
+        web.setWebChromeClient(new WebChromeClient(){
+            @Override public void onPermissionRequest(PermissionRequest request){
+                runOnUiThread(()->{
+                    if(!"https://appassets.androidplatform.net".equals(request.getOrigin().toString().replaceAll("/$", ""))){request.deny();return;}
+                    boolean audio=false;
+                    for(String r:request.getResources())if(PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r))audio=true;
+                    if(!audio){request.deny();return;}
+                    if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)==PackageManager.PERMISSION_GRANTED){request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});return;}
+                    if(pendingMic!=null)pendingMic.deny();pendingMic=request;
+                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},MIC_REQUEST);
+                });
+            }
+            @Override public void onPermissionRequestCanceled(PermissionRequest request){if(pendingMic==request)pendingMic=null;}
+        });
         web.setWebViewClient(new WebViewClient() {
+            @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request){
+                return assetLoader.shouldInterceptRequest(request.getUrl());
+            }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-                if (url.startsWith("file:///android_asset/")) return false;
+                if (url.startsWith("https://appassets.androidplatform.net/assets/")) return false;
                 Uri uri = request.getUrl();
                 if ("https".equalsIgnoreCase(uri.getScheme())) {
                     try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
@@ -106,6 +133,14 @@ public class MainActivity extends Activity {
         });
         setContentView(web);
         web.loadUrl(HOME);
+    }
+    @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] results){
+        super.onRequestPermissionsResult(requestCode,permissions,results);
+        if(requestCode==MIC_REQUEST&&pendingMic!=null){
+            PermissionRequest r=pendingMic;pendingMic=null;
+            if(results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)r.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+            else {r.deny();Toast.makeText(this,"يمكنك سماع الحصة؛ اسمح بالميكروفون للتسميع",Toast.LENGTH_LONG).show();}
+        }
     }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
@@ -144,7 +179,7 @@ public class MainActivity extends Activity {
             .setNegativeButton("إلغاء", null).setPositiveButton("إغلاق", (d, which) -> finish()).show();
     }
     @Override protected void onDestroy() {
-        if (web != null) { web.destroy(); web = null; }
+        if (web != null) { web.evaluateJavascript("window.voiceLeave && window.voiceLeave()",null); web.destroy(); web = null; }
         super.onDestroy();
     }
 }

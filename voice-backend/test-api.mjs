@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import app from './src/index.js';
+const req=(path,method='GET',origin='https://appassets.androidplatform.net',body=null,headers={})=>new Request('https://ahlquran-test.workers.dev'+path,{method,headers:{...(origin?{Origin:origin}:{}),...(body?{'Content-Type':'application/json'}:{}),...headers},...(body?{body:JSON.stringify(body)}:{})});
+let env={APP_ORIGIN:'https://appassets.androidplatform.net',DB:{prepare(){throw Error('no db query expected')}}};
+let r=await app.fetch(req('/api/health'),env);assert.equal(r.status,200);assert.equal((await r.json()).mode,'audio-only');
+r=await app.fetch(req('/api/health','OPTIONS'),env);assert.equal(r.status,204);assert.equal(r.headers.get('Access-Control-Allow-Origin'),env.APP_ORIGIN);
+r=await app.fetch(req('/api/health','GET','https://bad.example'),env);assert.equal(r.status,403);
+r=await app.fetch(req('/api/rooms'),env);assert.equal(r.status,401);
+r=await app.fetch(req('/api/rooms','POST',env.APP_ORIGIN,{title:'unauthorized'}),env);assert.equal(r.status,401);
+r=await app.fetch(req('/api/bootstrap','POST',null,{email:'wrong',password:'short'}),env);assert.equal(r.status,403);
+console.log('Voice Worker tests passed: health, CORS, unauthorized routes, bootstrap protection.');
