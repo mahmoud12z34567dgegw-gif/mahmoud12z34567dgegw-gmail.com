@@ -1,0 +1,7 @@
+Regression test v1.3.1:
+- Underlying issue confirmed: BODY[data-theme] caused closest('[data-theme]') to match all clicks.
+- SHA-256 function checked against Node crypto reference for all 3 demo credentials.
+- Playwright inlined page: auto-fill and sign-in succeeded as admin, teacher, student.
+- Wrong password correctly rejected; role UI differed; no browser JS exceptions.
+- Node --check app.js passed.
+- Android APK not compiled in this environment; user uses existing GitHub Actions workflow.

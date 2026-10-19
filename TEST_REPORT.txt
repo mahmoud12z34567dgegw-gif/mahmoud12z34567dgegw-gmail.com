@@ -1,0 +1,9 @@
+أكاديمية أهل القرآن v1.3 — مراجعة محلية
+PASS: JavaScript Syntax
+PASS: SHA-256 (3 known test vectors)
+PASS: local demo login admin/teacher/student and wrong-password rejection
+PASS: manager-only menu in role prototype
+PASS: admin adds demo user without plaintext password stored in JSON
+PASS: weekly calendar and appointment conflict test
+PASS: SVG XML validity, HTML parsing, ZIP integrity and Android versionCode 4
+NOT TESTED HERE: actual APK build (Android SDK unavailable); graphical browser rendering (headless browser blocked local navigation); connectivity between devices (not implemented).
