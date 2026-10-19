@@ -10,8 +10,8 @@ android {
         applicationId 'com.ahlquran.academy'
         minSdk 29
         targetSdk 34
-        versionCode 3
-        versionName '1.2-offline'
+        versionCode 4
+        versionName '1.3-smart-offline'
     }
 
     compileOptions {
