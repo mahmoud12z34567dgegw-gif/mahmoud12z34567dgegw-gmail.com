@@ -1,0 +1,8 @@
+النسخة 1.4 — اعمل APK بنفس طريقة GitHub Releases السابقة
+1) فك ضغط AhlAlQuran-v1.4-VIDEO-ACCOUNTS-FULL.zip.
+2) داخل GitHub مشروع الأكاديمية افتح Code > Add file > Upload files.
+3) ارفع محتويات المشروع بمساراتها الأصلية: app/ و .github/workflows/ وملفات Gradle الجذرية. احفظ التغيير.
+4) من Actions راقب Build and publish Ahl Al-Quran APK (علامة خضراء).
+5) افتح Releases، ثم أحدث إصدار Pre-release، واضغط AhlAlQuran.apk (ليس Source code).
+هذا مشروع Android وليس ملف APK مجمّعًا؛ GitHub يبني APK لك.
+تنبيه: الإصدار محلي، الروابط المرئية تتفتح في تطبيق اجتماع خارجي، لا يوجد بريد حقيقي أو مزامنة متعددة الأجهزة بعد.

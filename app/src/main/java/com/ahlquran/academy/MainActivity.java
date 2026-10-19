@@ -32,6 +32,26 @@ public class MainActivity extends Activity {
         @JavascriptInterface public String load() {
             return getSharedPreferences(PREF, Context.MODE_PRIVATE).getString("state", "");
         }
+        @JavascriptInterface public String newPassword() {
+            String alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#";
+            java.security.SecureRandom rng = new java.security.SecureRandom();
+            StringBuilder result = new StringBuilder(18);
+            for (int i=0; i<18; i++) result.append(alphabet.charAt(rng.nextInt(alphabet.length())));
+            return result.toString();
+        }
+        @JavascriptInterface public void shareText(String value) {
+            if (value == null || value.length() > 3000) return;
+            runOnUiThread(() -> {
+                try {
+                    Intent send = new Intent(Intent.ACTION_SEND);
+                    send.setType("text/plain");
+                    send.putExtra(Intent.EXTRA_TEXT, value);
+                    startActivity(Intent.createChooser(send, "مشاركة دعوة الحصة"));
+                } catch (Exception ex) {
+                    Toast.makeText(MainActivity.this, "تعذرت مشاركة الدعوة", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
         @JavascriptInterface public void exportBackup() {
             runOnUiThread(() -> {
                 Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
